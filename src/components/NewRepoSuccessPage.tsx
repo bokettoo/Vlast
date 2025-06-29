@@ -42,7 +42,6 @@ const NewRepoSuccessPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upload' | 'git'>('upload');
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     // Get repository from navigation state
@@ -52,24 +51,6 @@ const NewRepoSuccessPage: React.FC = () => {
       return;
     }
     setRepository(repo);
-
-    // Fetch current user for Git commands
-    const fetchCurrentUser = async () => {
-      try {
-        if (!config.isDevelopment) {
-          const user = await githubApi.getCurrentUser();
-          setCurrentUser(user);
-        } else {
-          // Mock user for development
-          setCurrentUser({ login: 'your-username' });
-        }
-      } catch (err) {
-        console.error('Failed to fetch current user:', err);
-        setCurrentUser({ login: 'your-username' });
-      }
-    };
-
-    fetchCurrentUser();
   }, [location.state, navigate]);
 
   const handleFileUpload = async (file: File, commitMessage: string) => {
@@ -83,6 +64,9 @@ const NewRepoSuccessPage: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         const [owner, repoName] = repository.full_name.split('/');
+        if (!owner || !repoName) {
+          throw new Error('Invalid repository name format');
+        }
         
         const reader = new FileReader();
         reader.onload = async () => {

@@ -7,18 +7,29 @@ import type {
   UpdateRepositoryRequest,
   UploadFileRequest,
   DeleteFileRequest,
-  GitHubApiError,
 } from '@/types';
 
 export class GitHubApiError extends Error {
   public readonly status?: number;
-  public readonly errors?: GitHubApiError['errors'];
+  public readonly errors?: Array<{
+    resource: string;
+    field: string;
+    code: string;
+  }>;
 
-  constructor(message: string, status?: number, errors?: GitHubApiError['errors']) {
+  constructor(message: string, status?: number, errors?: Array<{
+    resource: string;
+    field: string;
+    code: string;
+  }>) {
     super(message);
     this.name = 'GitHubApiError';
-    this.status = status;
-    this.errors = errors;
+    if (status !== undefined) {
+      this.status = status;
+    }
+    if (errors !== undefined) {
+      this.errors = errors;
+    }
   }
 }
 

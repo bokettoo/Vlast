@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Star, GitFork, Eye, Calendar, Clock, AlertCircle, 
   Lock, Unlock, ExternalLink, Code, Tag, Archive, 
-  Trash2, Edit3, Save, FileText, Upload, Folder,
+  Trash2, Save, FileText, Folder,
   Loader2, CheckCircle, Settings, Terminal, Copy, Download,
   GitBranch
 } from 'lucide-react';
-import { Repository } from '../data/fakeRepos';
+import type { Repository } from '@/types';
 import { config } from '../config/environment';
 import { githubApi } from '../utils/githubApi';
 import FileUploader from './FileUploader';
@@ -38,7 +38,6 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
   onDelete,
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'edit' | 'files' | 'git'>('details');
-  const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -56,7 +55,6 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
   
   // Git commands state
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     if (repository) {
@@ -64,16 +62,10 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
       setEditedDescription(repository.description || '');
       setSaveError('');
       setSaveSuccess(false);
-      setIsEditing(false);
       
       // Load files when switching to files tab
       if (activeTab === 'files') {
         loadRepositoryFiles();
-      }
-      
-      // Fetch current user for Git commands
-      if (activeTab === 'git') {
-        fetchCurrentUser();
       }
     }
   }, [repository, activeTab]);
@@ -91,21 +83,6 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
     };
   }, [isOpen]);
 
-  const fetchCurrentUser = async () => {
-    try {
-      if (!config.isDevelopment) {
-        const user = await githubApi.getCurrentUser();
-        setCurrentUser(user);
-      } else {
-        // Mock user for development
-        setCurrentUser({ login: 'your-username' });
-      }
-    } catch (err) {
-      console.error('Failed to fetch current user:', err);
-      setCurrentUser({ login: 'your-username' });
-    }
-  };
-
   const loadRepositoryFiles = async () => {
     if (!repository || config.isDevelopment) {
       // Mock files for development
@@ -121,6 +98,9 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
       setLoadingFiles(true);
       setFilesError('');
       const [owner, repoName] = repository.full_name.split('/');
+      if (!owner || !repoName) {
+        throw new Error('Invalid repository name format');
+      }
       const contents = await githubApi.getRepositoryContents(owner, repoName);
       
       const fileItems: FileItem[] = contents.map(item => ({
@@ -150,6 +130,9 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
 
       if (!config.isDevelopment) {
         const [owner, repoName] = repository.full_name.split('/');
+        if (!owner || !repoName) {
+          throw new Error('Invalid repository name format');
+        }
         const updates: any = {};
         
         if (editedName !== repository.name) {
@@ -166,7 +149,6 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
       }
 
       setSaveSuccess(true);
-      setIsEditing(false);
       
       // Update local repository data
       Object.assign(repository, {
@@ -200,6 +182,9 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
     try {
       setIsUploading(true);
       const [owner, repoName] = repository.full_name.split('/');
+      if (!owner || !repoName) {
+        throw new Error('Invalid repository name format');
+      }
       
       const reader = new FileReader();
       reader.onload = async () => {
@@ -239,6 +224,9 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
 
     try {
       const [owner, repoName] = repository.full_name.split('/');
+      if (!owner || !repoName) {
+        throw new Error('Invalid repository name format');
+      }
       const commitMessage = `Delete ${file.name}`;
       
       await githubApi.deleteFile(owner, repoName, file.path, file.sha, commitMessage);
@@ -509,7 +497,7 @@ git push -u origin feature/new-feature`,
                           Topics
                         </h3>
                         <div className="flex flex-wrap gap-2">
-                          {repository.topics.map((topic, index) => (
+                          {repository.topics.map((topic: string, index: number) => (
                             <span
                               key={index}
                               className="px-3 py-1 text-xs sm:text-sm bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, GitFork, Eye, Factory as Repository, Lock, Unlock } from 'lucide-react';
-import { Repository as RepoType } from '../data/fakeRepos';
+import type { Repository as RepoType } from '@/types';
 
 interface WidgetProps {
   title: string;

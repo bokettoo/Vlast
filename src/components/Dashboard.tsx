@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Search, RefreshCw, Grid3X3, List, User, Plus } from 'lucide-react';
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
 
   // Memoized calculations
   const uniqueLanguages = useMemo(() => {
-    return Array.from(new Set(repositories.map(repo => repo.language).filter(Boolean)));
+    return Array.from(new Set(repositories.map(repo => repo.language).filter((lang): lang is string => lang !== null)));
   }, [repositories]);
 
   const realTimeStats = useMemo(() => {
@@ -81,9 +81,12 @@ const Dashboard: React.FC = () => {
   const handleToggleVisibility = useCallback(async (repo: Repository) => {
     try {
       const [owner, repoName] = repo.full_name.split('/');
+      if (!owner || !repoName) {
+        throw new Error('Invalid repository name format');
+      }
       await toggleVisibilityMutation.mutateAsync({
-        owner,
-        repo: repoName,
+        owner: owner!,
+        repo: repoName!,
         makePrivate: !repo.private,
       });
       
@@ -96,7 +99,10 @@ const Dashboard: React.FC = () => {
   const handleDeleteRepository = useCallback(async (repo: Repository) => {
     try {
       const [owner, repoName] = repo.full_name.split('/');
-      await deleteRepositoryMutation.mutateAsync({ owner, repo: repoName });
+      if (!owner || !repoName) {
+        throw new Error('Invalid repository name format');
+      }
+      await deleteRepositoryMutation.mutateAsync({ owner: owner!, repo: repoName! });
       
       console.log(`Repository deleted: ${repo.name}`);
     } catch (err) {

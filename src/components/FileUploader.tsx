@@ -28,7 +28,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUpload, isUploading, clas
     setIsDragOver(false);
     
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
+    if (files.length > 0 && files[0]) {
       handleFileSelect(files[0]);
     }
   };
@@ -45,7 +45,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onUpload, isUploading, clas
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
+    if (files && files.length > 0 && files[0]) {
       handleFileSelect(files[0]);
     }
   };

@@ -168,7 +168,7 @@ const LandingPage: React.FC = () => {
             <div className="flex justify-center space-x-8 mb-8">
               <motion.a
                 whileHover={{ scale: 1.1, color: "#A855F7" }}
-                href="https://github.com"
+                href="https://github.com/bokettoo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-300 hover:text-purple-400 transition-colors"

@@ -1,5 +1,5 @@
 import { config } from '../config/environment';
-import { Repository } from '../data/fakeRepos';
+import type { Repository } from '@/types';
 
 export class GitHubApiError extends Error {
   constructor(message: string, public status?: number) {

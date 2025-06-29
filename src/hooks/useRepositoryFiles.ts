@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { githubApi } from '@/utils/api';
 import { QUERY_KEYS, MUTATION_KEYS } from '@/types';
-import type { FileContent, UploadFileRequest, DeleteFileRequest } from '@/types';
+import type { UploadFileRequest, DeleteFileRequest } from '@/types';
 
 export const useRepositoryContents = (owner: string, repo: string, path?: string) => {
   return useQuery({

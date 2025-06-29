@@ -120,9 +120,7 @@ export const validateRepositoryName = (name: string): string | null => {
   return null;
 };
 
-export const generateGitCommands = (repository: Repository, currentUser?: { login: string }) => {
-  const username = currentUser?.login || 'your-username';
-  
+export const generateGitCommands = (repository: Repository) => {
   return {
     clone: `git clone ${repository.clone_url}`,
     sshClone: `git clone ${repository.ssh_url}`,

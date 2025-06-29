@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { githubApi } from '@/utils/api';
 import { QUERY_KEYS, MUTATION_KEYS } from '@/types';
-import type { Repository, CreateRepositoryRequest, UpdateRepositoryRequest } from '@/types';
+import type { CreateRepositoryRequest, UpdateRepositoryRequest } from '@/types';
 
 export const useRepositories = () => {
   return useQuery({

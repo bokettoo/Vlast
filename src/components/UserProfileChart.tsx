@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { User, Calendar, MapPin, Link as LinkIcon, Building, Mail, AlertCircle, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Calendar, MapPin, Building, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { config } from '../config/environment';
 
 interface UserProfile {
@@ -110,22 +110,22 @@ const UserProfileChart: React.FC = () => {
       {
         name: 'Public Repos',
         value: profile.public_repos,
-        color: COLORS[0],
+        color: COLORS[0] || '#8B5CF6',
       },
       {
         name: 'Followers',
         value: profile.followers,
-        color: COLORS[1],
+        color: COLORS[1] || '#A855F7',
       },
       {
         name: 'Following',
         value: profile.following,
-        color: COLORS[2],
+        color: COLORS[2] || '#9333EA',
       },
       {
         name: 'Public Gists',
         value: profile.public_gists,
-        color: COLORS[3],
+        color: COLORS[3] || '#7C3AED',
       },
     ];
 
@@ -329,7 +329,7 @@ const UserProfileChart: React.FC = () => {
               <Bar 
                 dataKey="value" 
                 radius={[4, 4, 0, 0]}
-                fill={COLORS[0]}
+                fill={COLORS[0] || '#8B5CF6'}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -365,8 +365,8 @@ const UserProfileChart: React.FC = () => {
                 dataKey="value" 
                 radius={[0, 4, 4, 0]}
               >
-                {socialData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index + 1]} />
+                {socialData.map((_entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length] || '#8B5CF6'} />
                 ))}
               </Bar>
             </BarChart>

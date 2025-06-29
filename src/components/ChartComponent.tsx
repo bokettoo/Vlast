@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 
 interface ChartComponentProps {
@@ -73,7 +73,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ languageStats, totalSta
               fill="#8884d8"
               dataKey="value"
             >
-              {languageStats.map((entry, index) => (
+              {languageStats.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -109,8 +109,8 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ languageStats, totalSta
               dataKey="value" 
               radius={[4, 4, 0, 0]}
             >
-              {visibilityData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+              {visibilityData.map((_entry, index) => (
+                <Cell key={`cell-${index}`} fill={_entry.color} />
               ))}
             </Bar>
           </BarChart>
@@ -147,7 +147,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ languageStats, totalSta
               dataKey="value" 
               radius={[0, 4, 4, 0]}
             >
-              {languageStats.map((entry, index) => (
+              {languageStats.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>
