@@ -9,6 +9,17 @@ export const useRepositories = () => {
     queryFn: () => githubApi.fetchRepositories(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    retry: (failureCount, error) => {
+      // Don't retry on 401/403 errors (authentication issues)
+      if (error instanceof Error && 'status' in error) {
+        const status = (error as any).status;
+        if (status === 401 || status === 403) {
+          return false;
+        }
+      }
+      return failureCount < 3;
+    },
   });
 };
 
@@ -18,6 +29,7 @@ export const useRepository = (owner: string, repo: string) => {
     queryFn: () => githubApi.fetchRepository(owner, repo),
     enabled: !!owner && !!repo,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -28,8 +40,13 @@ export const useCreateRepository = () => {
     mutationKey: MUTATION_KEYS.createRepository,
     mutationFn: (params: CreateRepositoryRequest) => githubApi.createRepository(params),
     onSuccess: () => {
-      // Invalidate repositories query to refetch the list
+      // Invalidate and refetch repositories query
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
+      // Also refetch user data since repo count might have changed
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
+    },
+    onError: (error) => {
+      console.error('Failed to create repository:', error);
     },
   });
 };
@@ -55,6 +72,9 @@ export const useUpdateRepository = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repository(owner, repo) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
     },
+    onError: (error) => {
+      console.error('Failed to update repository:', error);
+    },
   });
 };
 
@@ -67,8 +87,13 @@ export const useDeleteRepository = () => {
       return githubApi.deleteRepository(owner, repo);
     },
     onSuccess: () => {
-      // Invalidate repositories query to refetch the list
+      // Invalidate and refetch repositories query
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
+      // Also refetch user data since repo count might have changed
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
+    },
+    onError: (error) => {
+      console.error('Failed to delete repository:', error);
     },
   });
 };
@@ -93,6 +118,9 @@ export const useToggleRepositoryVisibility = () => {
       // Invalidate specific repository and repositories list
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repository(owner, repo) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
+    },
+    onError: (error) => {
+      console.error('Failed to toggle repository visibility:', error);
     },
   });
 };

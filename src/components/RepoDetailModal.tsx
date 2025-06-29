@@ -145,6 +145,9 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
 
         if (Object.keys(updates).length > 0) {
           await githubApi.updateRepository(owner, repoName, updates);
+          
+          // Close modal to trigger refresh in parent component
+          onClose();
         }
       }
 
@@ -386,7 +389,7 @@ git push -u origin feature/new-feature`,
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
               <div className="p-4 sm:p-6">
                 {/* Details Tab */}
                 {activeTab === 'details' && (
@@ -619,7 +622,7 @@ git push -u origin feature/new-feature`,
                           No files found in this repository
                         </div>
                       ) : (
-                        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+                        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto custom-scrollbar">
                           {files.map((file) => (
                             <div
                               key={file.path}

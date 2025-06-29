@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Search, RefreshCw, Grid3X3, List, User, Plus } from 'lucide-react';
@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
   const { logout } = useAuth();
   
   // Data fetching
-  const { data: repositories = [], isLoading, error, refetch } = useRepositories();
+  const { data: repositories = [], isLoading, error, refetch, isRefetching } = useRepositories();
   
   // Mutations
   const toggleVisibilityMutation = useToggleRepositoryVisibility();
@@ -41,6 +41,9 @@ const Dashboard: React.FC = () => {
   
   // Create repository state
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Ref for debouncing refresh
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Memoized calculations
   const uniqueLanguages = useMemo(() => {
@@ -77,6 +80,49 @@ const Dashboard: React.FC = () => {
     return filtered;
   }, [repositories, searchQuery, visibilityFilter, languageFilter]);
 
+  // Enhanced refresh handler with debouncing
+  const handleRefresh = useCallback(async () => {
+    // Clear any existing timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    // If already refreshing, don't trigger another refresh
+    if (isRefetching) {
+      return;
+    }
+
+    try {
+      console.log('Refreshing repository data...');
+      await refetch();
+      console.log('Repository data refreshed successfully');
+    } catch (err) {
+      console.error('Failed to refresh repository data:', err);
+    }
+  }, [refetch, isRefetching]);
+
+  // Debounced refresh handler for button clicks
+  const handleRefreshClick = useCallback(() => {
+    // Clear any existing timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    // Set a small delay to prevent rapid clicking
+    refreshTimeoutRef.current = setTimeout(() => {
+      handleRefresh();
+    }, 100);
+  }, [handleRefresh]);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Event handlers
   const handleToggleVisibility = useCallback(async (repo: Repository) => {
     try {
@@ -91,10 +137,13 @@ const Dashboard: React.FC = () => {
       });
       
       console.log(`Repository visibility changed: ${repo.name} is now ${!repo.private ? 'private' : 'public'}`);
+      
+      // Force refresh after visibility change
+      await handleRefresh();
     } catch (err) {
       console.error('Failed to toggle repository visibility:', err);
     }
-  }, [toggleVisibilityMutation]);
+  }, [toggleVisibilityMutation, handleRefresh]);
 
   const handleDeleteRepository = useCallback(async (repo: Repository) => {
     try {
@@ -105,11 +154,14 @@ const Dashboard: React.FC = () => {
       await deleteRepositoryMutation.mutateAsync({ owner: owner!, repo: repoName! });
       
       console.log(`Repository deleted: ${repo.name}`);
+      
+      // Force refresh after deletion
+      await handleRefresh();
     } catch (err) {
       console.error('Failed to delete repository:', err);
       throw err; // Re-throw to be handled by the confirmation modal
     }
-  }, [deleteRepositoryMutation]);
+  }, [deleteRepositoryMutation, handleRefresh]);
 
   const handleDeleteClick = useCallback((repo: Repository) => {
     setRepoToDelete(repo);
@@ -123,8 +175,10 @@ const Dashboard: React.FC = () => {
 
   const handleCreateSuccess = useCallback((newRepository: Repository) => {
     setShowCreateModal(false);
+    // Force refresh after creating new repository
+    handleRefresh();
     navigate('/repo-success', { state: { repository: newRepository } });
-  }, [navigate]);
+  }, [navigate, handleRefresh]);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -162,6 +216,9 @@ const Dashboard: React.FC = () => {
                 </h1>
                 <p className="text-purple-200/70 text-sm font-light">
                   {repositories.length} repositories • {realTimeStats.totalStars} stars • {realTimeStats.totalForks} forks
+                  {isRefetching && (
+                    <span className="ml-2 text-purple-400">• Refreshing...</span>
+                  )}
                 </p>
               </div>
               
@@ -201,10 +258,16 @@ const Dashboard: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => refetch()}
-                  className="p-2 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 border border-white/20 transition-colors"
+                  onClick={handleRefreshClick}
+                  disabled={isRefetching}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isRefetching 
+                      ? 'bg-purple-600/50 text-white border border-purple-400/50' 
+                      : 'bg-white/10 text-purple-300 hover:bg-white/20 border border-white/20'
+                  }`}
+                  title="Refresh repositories"
                 >
-                  <RefreshCw className="w-5 h-5" />
+                  <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
                 </motion.button>
                 
                 <motion.button
@@ -229,7 +292,17 @@ const Dashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 font-light"
             >
-              {error.message}
+              <div className="flex items-center justify-between">
+                <span>{error.message}</span>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleRefreshClick}
+                  className="px-3 py-1 bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 rounded text-sm transition-colors"
+                >
+                  Retry
+                </motion.button>
+              </div>
             </motion.div>
           )}
 
@@ -286,7 +359,7 @@ const Dashboard: React.FC = () => {
               <select
                 value={languageFilter}
                 onChange={(e) => setLanguageFilter(e.target.value)}
-                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300 font-light"
+                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300 font-light custom-scrollbar"
               >
                 <option value="all">All Languages</option>
                 {uniqueLanguages.map(language => (
