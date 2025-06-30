@@ -19,6 +19,7 @@ interface RepoDetailModalProps {
   onClose: () => void;
   onToggleVisibility: (repo: Repository) => void;
   onDelete: (repo: Repository) => void;
+  onRepoChanged?: () => void;
 }
 
 interface FileItem {
@@ -36,6 +37,7 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
   onClose,
   onToggleVisibility,
   onDelete,
+  onRepoChanged,
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'edit' | 'files' | 'git'>('details');
   const [editedName, setEditedName] = useState('');
@@ -146,6 +148,8 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
         if (Object.keys(updates).length > 0) {
           await githubApi.updateRepository(owner, repoName, updates);
           
+          if (onRepoChanged) onRepoChanged();
+          
           // Close modal to trigger refresh in parent component
           onClose();
         }
@@ -179,6 +183,7 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
         type: 'file',
       };
       setFiles(prev => [...prev, newFile]);
+      if (onRepoChanged) onRepoChanged();
       return;
     }
 
@@ -201,6 +206,7 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
           
           // Reload files after successful upload
           await loadRepositoryFiles();
+          if (onRepoChanged) onRepoChanged();
         } catch (err) {
           throw err;
         }
@@ -222,6 +228,7 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
     if (config.isDevelopment) {
       // Mock delete for development
       setFiles(prev => prev.filter(f => f.path !== file.path));
+      if (onRepoChanged) onRepoChanged();
       return;
     }
 
@@ -236,6 +243,7 @@ const RepoDetailModal: React.FC<RepoDetailModalProps> = ({
       
       // Reload files after successful deletion
       await loadRepositoryFiles();
+      if (onRepoChanged) onRepoChanged();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete file. Check console for details.');
     }

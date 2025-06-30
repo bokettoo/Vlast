@@ -287,6 +287,7 @@ export interface RepoDetailModalProps extends ModalProps {
   repository: Repository | null;
   onToggleVisibility: (repo: Repository) => void;
   onDelete: (repo: Repository) => void;
+  onRepoChanged?: () => void;
 }
 
 export interface ConfirmDeleteModalProps extends ModalProps {

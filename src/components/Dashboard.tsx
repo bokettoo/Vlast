@@ -135,15 +135,12 @@ const Dashboard: React.FC = () => {
         repo: repoName!,
         makePrivate: !repo.private,
       });
-      
       console.log(`Repository visibility changed: ${repo.name} is now ${!repo.private ? 'private' : 'public'}`);
-      
-      // Force refresh after visibility change
-      await handleRefresh();
+      // No need to refetch the whole list, React Query will update the single repo
     } catch (err) {
       console.error('Failed to toggle repository visibility:', err);
     }
-  }, [toggleVisibilityMutation, handleRefresh]);
+  }, [toggleVisibilityMutation]);
 
   const handleDeleteRepository = useCallback(async (repo: Repository) => {
     try {
@@ -152,16 +149,14 @@ const Dashboard: React.FC = () => {
         throw new Error('Invalid repository name format');
       }
       await deleteRepositoryMutation.mutateAsync({ owner: owner!, repo: repoName! });
-      
       console.log(`Repository deleted: ${repo.name}`);
-      
-      // Force refresh after deletion
-      await handleRefresh();
+      // Refetch the list after deletion for immediate UI update
+      await refetch();
     } catch (err) {
       console.error('Failed to delete repository:', err);
       throw err; // Re-throw to be handled by the confirmation modal
     }
-  }, [deleteRepositoryMutation, handleRefresh]);
+  }, [deleteRepositoryMutation, refetch]);
 
   const handleDeleteClick = useCallback((repo: Repository) => {
     setRepoToDelete(repo);
@@ -413,6 +408,7 @@ const Dashboard: React.FC = () => {
         onClose={handleCloseModal}
         onToggleVisibility={handleToggleVisibility}
         onDelete={handleDeleteClick}
+        onRepoChanged={refetch}
       />
 
       {/* Delete Confirmation Modal */}

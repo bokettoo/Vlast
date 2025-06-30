@@ -45,9 +45,6 @@ export const useCreateRepository = () => {
       // Also refetch user data since repo count might have changed
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
     },
-    onError: (error) => {
-      console.error('Failed to create repository:', error);
-    },
   });
 };
 
@@ -72,9 +69,6 @@ export const useUpdateRepository = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repository(owner, repo) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
     },
-    onError: (error) => {
-      console.error('Failed to update repository:', error);
-    },
   });
 };
 
@@ -86,14 +80,13 @@ export const useDeleteRepository = () => {
     mutationFn: ({ owner, repo }: { owner: string; repo: string }) => {
       return githubApi.deleteRepository(owner, repo);
     },
-    onSuccess: () => {
-      // Invalidate and refetch repositories query
+    onSuccess: (_, { owner, repo }) => {
+      // Invalidate the repo list so the deleted repo disappears
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
+      // Also invalidate the single repo in case a detail view is open
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repository(owner, repo) });
       // Also refetch user data since repo count might have changed
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
-    },
-    onError: (error) => {
-      console.error('Failed to delete repository:', error);
     },
   });
 };
@@ -115,12 +108,10 @@ export const useToggleRepositoryVisibility = () => {
       return githubApi.toggleRepositoryVisibility(owner, repo, makePrivate);
     },
     onSuccess: (_, { owner, repo }) => {
-      // Invalidate specific repository and repositories list
+      // Invalidate the single repository
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repository(owner, repo) });
+      // ALSO invalidate the list so the UI updates everywhere
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repositories });
-    },
-    onError: (error) => {
-      console.error('Failed to toggle repository visibility:', error);
     },
   });
 };
