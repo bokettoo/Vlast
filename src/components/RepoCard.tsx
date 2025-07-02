@@ -10,7 +10,7 @@ interface RepoCardProps {
   onClick: (repo: Repository) => void;
 }
 
-const RepoCard: React.FC<RepoCardProps> = ({ repository, onToggleVisibility, onDelete, onClick }) => {
+const RepoCard: React.FC<RepoCardProps> = React.memo(({ repository, onToggleVisibility, onDelete, onClick }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -46,13 +46,9 @@ const RepoCard: React.FC<RepoCardProps> = ({ repository, onToggleVisibility, onD
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(168, 85, 247, 0.2)" }}
-      transition={{ duration: 0.3 }}
+    <div
       onClick={() => onClick(repository)}
-      className="h-full p-6 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 hover:border-purple-400/50 cursor-pointer transition-all duration-300 group flex flex-col"
+      className="h-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 cursor-pointer transition-colors group flex flex-col"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
@@ -131,11 +127,9 @@ const RepoCard: React.FC<RepoCardProps> = ({ repository, onToggleVisibility, onD
 
       {/* Actions - Always at bottom */}
       <div className="flex items-center space-x-2 mt-auto pt-4">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={handleToggleVisibility}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex-1 justify-center ${
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex-1 justify-center ${
             repository.private
               ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30 border border-green-500/30'
               : 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 border border-yellow-500/30'
@@ -152,20 +146,18 @@ const RepoCard: React.FC<RepoCardProps> = ({ repository, onToggleVisibility, onD
               <span>Private</span>
             </>
           )}
-        </motion.button>
+        </button>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={handleDelete}
-          className="flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 transition-all duration-200"
+          className="flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 transition-colors"
         >
           <Trash2 className="w-3 h-3" />
           <span>Delete</span>
-        </motion.button>
+        </button>
       </div>
-    </motion.div>
+    </div>
   );
-};
+});
 
 export default RepoCard;

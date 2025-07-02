@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Key, Shield, ArrowRight, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import Background3D from '@/components/Background3D';
 
 const TokenSubmission: React.FC = () => {
   const [token, setToken] = useState('');
@@ -49,8 +48,6 @@ const TokenSubmission: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Background3D />
-      
       <div className="relative z-10 container mx-auto px-6 py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

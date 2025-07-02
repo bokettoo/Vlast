@@ -103,7 +103,6 @@ const NewRepoSuccessPage: React.FC = () => {
   if (!repository) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
-        <Background3D />
         <div className="relative z-10 text-center">
           <h2 className="text-2xl font-light text-purple-100 mb-4">Repository not found</h2>
           <motion.button
@@ -139,8 +138,6 @@ git push -u origin ${repository.default_branch}`,
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Background3D />
-      
       <div className="relative z-10 container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">

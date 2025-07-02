@@ -27,3 +27,11 @@
 .custom-scrollbar::-webkit-scrollbar-corner {
   background: #1e1b4b;
 }
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e1b4b 0%, #6d28d9 40%, #a855f7 80%, #f472b6 100%);
+  background-attachment: fixed;
+  background-size: cover;
+  color: #fff;
+}

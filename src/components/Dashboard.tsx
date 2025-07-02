@@ -1,11 +1,9 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Search, RefreshCw, Grid3X3, List, User, Plus } from 'lucide-react';
 import { useRepositories, useToggleRepositoryVisibility, useDeleteRepository } from '@/hooks/useRepositories';
 import { useAuth } from '@/hooks/useAuth';
 import { calculateRepositoryStats } from '@/utils/formatters';
-import Background3D from '@/components/Background3D';
 import RepoCard from '@/components/RepoCard';
 import RepoDetailModal from '@/components/RepoDetailModal';
 import WidgetComponent from '@/components/WidgetComponent';
@@ -45,6 +43,10 @@ const Dashboard: React.FC = () => {
   // Ref for debouncing refresh
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const reposPerPage = 12;
+
   // Memoized calculations
   const uniqueLanguages = useMemo(() => {
     return Array.from(new Set(repositories.map(repo => repo.language).filter((lang): lang is string => lang !== null)));
@@ -80,6 +82,18 @@ const Dashboard: React.FC = () => {
     return filtered;
   }, [repositories, searchQuery, visibilityFilter, languageFilter]);
 
+  // Calculate paginated repos
+  const totalPages = Math.ceil(filteredRepos.length / reposPerPage);
+  const paginatedRepos = useMemo(() => {
+    const start = (currentPage - 1) * reposPerPage;
+    return filteredRepos.slice(start, start + reposPerPage);
+  }, [filteredRepos, currentPage]);
+
+  // Reset to page 1 if filters change and current page is out of range
+  React.useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredRepos, totalPages]);
+
   // Enhanced refresh handler with debouncing
   const handleRefresh = useCallback(async () => {
     // Clear any existing timeout
@@ -93,9 +107,7 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      console.log('Refreshing repository data...');
       await refetch();
-      console.log('Repository data refreshed successfully');
     } catch (err) {
       console.error('Failed to refresh repository data:', err);
     }
@@ -135,8 +147,6 @@ const Dashboard: React.FC = () => {
         repo: repoName!,
         makePrivate: !repo.private,
       });
-      console.log(`Repository visibility changed: ${repo.name} is now ${!repo.private ? 'private' : 'public'}`);
-      // No need to refetch the whole list, React Query will update the single repo
     } catch (err) {
       console.error('Failed to toggle repository visibility:', err);
     }
@@ -149,8 +159,6 @@ const Dashboard: React.FC = () => {
         throw new Error('Invalid repository name format');
       }
       await deleteRepositoryMutation.mutateAsync({ owner: owner!, repo: repoName! });
-      console.log(`Repository deleted: ${repo.name}`);
-      // Refetch the list after deletion for immediate UI update
       await refetch();
     } catch (err) {
       console.error('Failed to delete repository:', err);
@@ -188,7 +196,6 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center">
-        <Background3D />
         <div className="relative z-10">
           <LoadingSpinner size="lg" text="Loading Repositories..." />
         </div>
@@ -198,7 +205,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Background3D />
       
       <div className="relative z-10">
         {/* Header - Fixed but not overlapping */}
@@ -218,19 +224,15 @@ const Dashboard: React.FC = () => {
               </div>
               
               <div className="flex items-center space-x-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setShowCreateModal(true)}
                   className="flex items-center space-x-2 px-4 py-2 bg-purple-600/50 text-white hover:bg-purple-600 border border-purple-400/50 rounded-lg transition-colors font-light"
                 >
                   <Plus className="w-4 h-4" />
                   <span>New Repository</span>
-                </motion.button>
+                </button>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setShowProfile(!showProfile)}
                   className={`p-2 rounded-lg transition-colors ${
                     showProfile 
@@ -239,20 +241,16 @@ const Dashboard: React.FC = () => {
                   }`}
                 >
                   <User className="w-5 h-5" />
-                </motion.button>
+                </button>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                   className="p-2 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 border border-white/20 transition-colors"
                 >
                   {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
-                </motion.button>
+                </button>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={handleRefreshClick}
                   disabled={isRefetching}
                   className={`p-2 rounded-lg transition-colors ${
@@ -260,20 +258,17 @@ const Dashboard: React.FC = () => {
                       ? 'bg-purple-600/50 text-white border border-purple-400/50' 
                       : 'bg-white/10 text-purple-300 hover:bg-white/20 border border-white/20'
                   }`}
-                  title="Refresh repositories"
                 >
                   <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
-                </motion.button>
+                </button>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={logout}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 rounded-lg transition-colors font-light"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
-                </motion.button>
+                </button>
               </div>
             </div>
           </div>
@@ -282,44 +277,29 @@ const Dashboard: React.FC = () => {
         {/* Main Content - Proper spacing from fixed header */}
         <div className="container mx-auto px-6 py-8">
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 font-light"
-            >
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 font-light">
               <div className="flex items-center justify-between">
                 <span>{error.message}</span>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={handleRefreshClick}
                   className="px-3 py-1 bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 rounded text-sm transition-colors"
                 >
                   Retry
-                </motion.button>
+                </button>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Stats Widgets - Now using real data */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <WidgetComponent repositories={repositories} />
-          </motion.div>
+          </div>
 
           {/* User Profile Chart Section */}
           {showProfile && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-8"
-            >
+            <div className="mb-8">
               <UserProfileChart />
-            </motion.div>
+            </div>
           )}
 
           {/* Filters */}
@@ -376,55 +356,78 @@ const Dashboard: React.FC = () => {
               <p className="text-purple-300/70 font-light">Try adjusting your search or filter criteria</p>
             </div>
           ) : (
-            <div className={`grid ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1'
-            } gap-6`}>
-              {filteredRepos.map((repo, index) => (
-                <motion.div
-                  key={repo.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+            <>
+              <div className={`grid ${
+                viewMode === 'grid' 
+                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+                  : 'grid-cols-1'
+              } gap-6`}>
+                {paginatedRepos.map((repo) => (
+                  <div key={repo.id}>
+                    <RepoCard
+                      repository={repo}
+                      onToggleVisibility={handleToggleVisibility}
+                      onDelete={handleDeleteClick}
+                      onClick={handleRepoClick}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* Pagination Controls */}
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-purple-200 font-light disabled:opacity-50"
                 >
-                  <RepoCard
-                    repository={repo}
-                    onToggleVisibility={handleToggleVisibility}
-                    onDelete={handleDeleteClick}
-                    onClick={handleRepoClick}
-                  />
-                </motion.div>
-              ))}
-            </div>
+                  Previous
+                </button>
+                <span className="text-purple-300 font-light">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-purple-200 font-light disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Repository Detail Modal */}
-      <RepoDetailModal
-        repository={selectedRepo}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onToggleVisibility={handleToggleVisibility}
-        onDelete={handleDeleteClick}
-        onRepoChanged={refetch}
-      />
+      {isModalOpen && (
+        <RepoDetailModal
+          repository={selectedRepo}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onToggleVisibility={handleToggleVisibility}
+          onDelete={handleDeleteClick}
+          onRepoChanged={refetch}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
-      <ConfirmDeleteModal
-        repository={repoToDelete}
-        isOpen={showDeleteConfirm}
-        onClose={handleCloseDeleteConfirm}
-        onConfirm={handleDeleteRepository}
-      />
+      {showDeleteConfirm && (
+        <ConfirmDeleteModal
+          repository={repoToDelete}
+          isOpen={showDeleteConfirm}
+          onClose={handleCloseDeleteConfirm}
+          onConfirm={handleDeleteRepository}
+        />
+      )}
 
       {/* Create Repository Modal */}
-      <CreateRepoModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={handleCreateSuccess}
-      />
+      {showCreateModal && (
+        <CreateRepoModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
     </div>
   );
 };

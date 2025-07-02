@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, BarChart3, Github } from 'lucide-react';
-import Background3D from './Background3D';
 import { useAuth } from '@/hooks/useAuth';
 
 const LandingPage: React.FC = () => {
@@ -34,8 +33,6 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Background3D />
-      
       {/* Hero Section - Full Viewport Height */}
       <div className="relative z-10 h-screen flex items-center justify-center">
         <div className="text-center px-6 max-w-4xl mx-auto">
