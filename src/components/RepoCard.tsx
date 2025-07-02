@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Star, GitFork, Eye, Calendar, Lock, Unlock, Trash2 } from 'lucide-react';
 import { Repository } from '../data/fakeRepos';
 

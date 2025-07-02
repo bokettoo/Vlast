@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { config } from '../config/environment';
 import { githubApi } from '../utils/githubApi';
-import Background3D from './Background3D';
 import FileUploader from './FileUploader';
 
 interface Repository {
